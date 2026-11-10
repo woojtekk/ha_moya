@@ -1,0 +1,75 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "MOYA Promocje",
+        "description": "Integracja sprawdza stronę moyaexpress.pl/aktualnosci i pokazuje bieżącą promocję (rabat, dni, kod rabatowy, baner).",
+        "data": {
+          "scan_interval": "Jak często sprawdzać stronę (godziny)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Nie udało się połączyć ze stroną moyaexpress.pl.",
+      "parse_error": "Strona się otworzyła, ale nie znaleziono listy aktualności."
+    },
+    "abort": {
+      "already_configured": "Integracja jest już skonfigurowana."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Ustawienia MOYA Promocje",
+        "data": {
+          "scan_interval": "Jak często sprawdzać stronę (godziny)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "promo_available": {
+        "name": "Promocja"
+      },
+      "promo_active_today": {
+        "name": "Promocja dziś"
+      }
+    },
+    "sensor": {
+      "discount": {
+        "name": "Rabat"
+      },
+      "code": {
+        "name": "Kod rabatowy"
+      },
+      "days": {
+        "name": "Dni promocji"
+      },
+      "start_date": {
+        "name": "Początek promocji"
+      },
+      "end_date": {
+        "name": "Koniec promocji"
+      },
+      "title": {
+        "name": "Tytuł promocji"
+      },
+      "status": {
+        "name": "Status promocji",
+        "state": {
+          "active": "Trwa",
+          "upcoming": "Nadchodzi",
+          "expired": "Zakończona",
+          "unknown": "Nieznane daty",
+          "none": "Brak promocji"
+        }
+      }
+    },
+    "image": {
+      "banner": {
+        "name": "Baner promocji"
+      }
+    }
+  }
+}

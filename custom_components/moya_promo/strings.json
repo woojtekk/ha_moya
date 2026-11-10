@@ -1,0 +1,75 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "MOYA Promotions",
+        "description": "Checks moyaexpress.pl/aktualnosci and shows the current fuel promotion (discount, days, discount code, banner).",
+        "data": {
+          "scan_interval": "Check interval (hours)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Could not connect to moyaexpress.pl.",
+      "parse_error": "Page loaded but no news list was found."
+    },
+    "abort": {
+      "already_configured": "Already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "MOYA Promotions options",
+        "data": {
+          "scan_interval": "Check interval (hours)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "promo_available": {
+        "name": "Promotion"
+      },
+      "promo_active_today": {
+        "name": "Promotion today"
+      }
+    },
+    "sensor": {
+      "discount": {
+        "name": "Discount"
+      },
+      "code": {
+        "name": "Discount code"
+      },
+      "days": {
+        "name": "Promotion days"
+      },
+      "start_date": {
+        "name": "Promotion start"
+      },
+      "end_date": {
+        "name": "Promotion end"
+      },
+      "title": {
+        "name": "Promotion title"
+      },
+      "status": {
+        "name": "Promotion status",
+        "state": {
+          "active": "Active",
+          "upcoming": "Upcoming",
+          "expired": "Expired",
+          "unknown": "Unknown dates",
+          "none": "No promotion"
+        }
+      }
+    },
+    "image": {
+      "banner": {
+        "name": "Promotion banner"
+      }
+    }
+  }
+}

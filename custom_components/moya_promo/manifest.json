@@ -1,0 +1,14 @@
+{
+  "domain": "moya_promo",
+  "name": "MOYA Promocje",
+  "codeowners": ["@woojtekk"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/woojtekk/ha_moya",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/woojtekk/ha_moya/issues",
+  "requirements": [],
+  "single_config_entry": true,
+  "version": "1.0.0"
+}
