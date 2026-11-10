@@ -131,3 +131,9 @@ Parser nie ma zależności od HA – logikę można testować samodzielnie (`cus
 ## Uwagi
 
 Integracja nie jest powiązana z Anwim S.A. ani MOYA. Zmiana wyglądu strony może wymagać poprawek parsera.
+
+## Wydania
+
+Nowe wydanie powstaje automatycznie (workflow `.github/workflows/release.yml`): wystarczy podnieść `version`
+w `custom_components/moya_promo/manifest.json` i dopisać sekcję `## X.Y.Z – data` w `CHANGELOG.md`.
+Workflow utworzy tag `vX.Y.Z` i wydanie z opisem z changeloga; HACS zaproponuje aktualizację.
