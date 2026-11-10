@@ -20,6 +20,11 @@ USER_AGENT = (
     "(KHTML, like Gecko) Chrome/130.0 Safari/537.36 HomeAssistant-moya_promo"
 )
 
+# Historia promocji (kalendarz)
+STORAGE_VERSION = 1
+MAX_STORED_PROMOTIONS = 200
+MAX_ARTICLES_PER_UPDATE = 10
+
 STATUS_ACTIVE = "active"
 STATUS_UPCOMING = "upcoming"
 STATUS_EXPIRED = "expired"

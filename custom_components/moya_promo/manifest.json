@@ -1,7 +1,9 @@
 {
   "domain": "moya_promo",
   "name": "MOYA Promocje",
-  "codeowners": ["@woojtekk"],
+  "codeowners": [
+    "@woojtekk"
+  ],
   "config_flow": true,
   "dependencies": [],
   "documentation": "https://github.com/woojtekk/ha_moya",
@@ -10,5 +12,5 @@
   "issue_tracker": "https://github.com/woojtekk/ha_moya/issues",
   "requirements": [],
   "single_config_entry": true,
-  "version": "1.0.0"
+  "version": "1.1.0"
 }

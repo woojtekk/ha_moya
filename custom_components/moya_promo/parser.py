@@ -100,6 +100,25 @@ class Promotion:
         data["days"] = self.days_text
         return data
 
+    @classmethod
+    def from_dict(cls, data: dict) -> Promotion:
+        """Odtwarza promocję z zapisanego słownika (as_dict)."""
+        kwargs = {}
+        for key in cls.__dataclass_fields__:
+            value = data.get(key)
+            if key in ("published", "start", "end") and isinstance(value, str):
+                try:
+                    value = date.fromisoformat(value)
+                except ValueError:
+                    value = None
+            kwargs[key] = value
+        return cls(**kwargs)
+
+    @property
+    def sort_key(self) -> date:
+        """Data do sortowania (najpierw początek, potem publikacja)."""
+        return self.start or self.published or date.min
+
 
 def html_to_text(raw: str) -> str:
     """Usuwa tagi, encje i nadmiarowe spacje."""

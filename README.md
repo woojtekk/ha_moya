@@ -39,6 +39,21 @@ Skopiuj katalog `custom_components/moya_promo` do `config/custom_components/` i 
 | `sensor.moya_promocje_status_promocji` | `active` / `upcoming` / `expired` / `unknown` / `none` |
 | `sensor.moya_promocje_tytul_promocji` | tytuł; atrybuty: `url`, `terms_url`, `stations_url`, `image_url` |
 | `image.moya_promocje_baner_promocji` | baner promocji |
+| `calendar.moya_promocje_promocje_moya` | kalendarz: każda promocja jako wydarzenie całodniowe z kodem, kwotą i linkami w opisie |
+
+### Kalendarz
+
+Przy każdym sprawdzeniu integracja czyta wszystkie promocje z pierwszej strony aktualności (ok. 6 ostatnich)
+i zapisuje je w pamięci HA (`.storage/moya_promo.*`), więc historia w kalendarzu rośnie z czasem i przetrwa restart.
+Artykuł jest pobierany tylko raz – kolejne sprawdzenia ściągają wyłącznie listę.
+Kalendarz jest `on`, gdy promocja trwa; widać go też w panelu **Kalendarz** w HA.
+
+```yaml
+type: calendar
+entities:
+  - calendar.moya_promocje_promocje_moya
+initial_view: listWeek
+```
 
 Identyfikatory encji mogą się różnić, jeśli HA ma ustawiony inny język – sprawdź je w ustawieniach urządzenia.
 

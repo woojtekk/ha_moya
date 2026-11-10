@@ -8,10 +8,17 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.event import async_track_time_change
+from homeassistant.helpers.storage import Store
 
+from .const import DOMAIN, STORAGE_VERSION
 from .coordinator import MoyaPromoCoordinator
 
-PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.IMAGE]
+PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.CALENDAR,
+    Platform.IMAGE,
+    Platform.SENSOR,
+]
 
 type MoyaConfigEntry = ConfigEntry[MoyaPromoCoordinator]
 
@@ -39,6 +46,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: MoyaConfigEntry) -> bool
 async def async_unload_entry(hass: HomeAssistant, entry: MoyaConfigEntry) -> bool:
     """Usunięcie wpisu."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: MoyaConfigEntry) -> None:
+    """Usunięcie zapisanej historii promocji razem z integracją."""
+    await Store(hass, STORAGE_VERSION, f"{DOMAIN}.{entry.entry_id}").async_remove()
 
 
 async def _async_reload(hass: HomeAssistant, entry: MoyaConfigEntry) -> None:
