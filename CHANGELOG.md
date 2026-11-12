@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.1 – 2026-11-12
+
+### Nowe
+- Własna ikona integracji (`custom_components/moya_promo/brand/`), widoczna w Ustawieniach → Urządzenia i usługi od Home Assistant 2026.3.
+- Przykładowa automatyzacja WhatsApp w `examples/automation_whatsapp.yaml`.
+
 ## 1.2.0 – 2026-11-12
 
 ### Nowe

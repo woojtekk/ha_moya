@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/icon@2x.png" alt="MOYA Promocje" width="160"></p>
+
 # MOYA Promocje – integracja Home Assistant (HACS)
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://hacs.xyz/)
