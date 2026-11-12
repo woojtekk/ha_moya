@@ -76,5 +76,11 @@
         "name": "MOYA promotions"
       }
     }
+  },
+  "services": {
+    "announce_current": {
+      "name": "Announce current promotion",
+      "description": "Fires the moya_promo_new_promotion event for the current promotion (with test: true). Use it to test notification automations."
+    }
   }
 }

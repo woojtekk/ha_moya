@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.2.0 – 2026-11-12
+
+### Nowe
+- **Zdarzenie `moya_promo_new_promotion`** wysyłane dokładnie raz dla każdej nowej promocji. Integracja trwale zapamiętuje, którą promocję już zgłosiła, więc zdarzenie nie przepada, gdy promocja pojawi się w trakcie restartu HA, i nie dubluje się po restarcie. Dane promocji (kwota, kod, dni, linki, baner) są w `trigger.event.data`.
+- **Akcja `moya_promo.announce_current`** – ręcznie wysyła zdarzenie dla bieżącej promocji (z `test: true`), do testowania automatyzacji.
+
+### Poprawki
+- Powiadomienia oparte na zmianie encji gubiły promocję, która pojawiła się podczas przeładowania integracji. Zalecana automatyzacja w README korzysta teraz ze zdarzenia.
+- Po aktualizacji z 1.1.0 bieżąca promocja zostanie zgłoszona jeden raz.
+
 ## 1.1.0 – 2026-11-10
 
 ### Nowe

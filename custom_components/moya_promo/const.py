@@ -20,6 +20,10 @@ USER_AGENT = (
     "(KHTML, like Gecko) Chrome/130.0 Safari/537.36 HomeAssistant-moya_promo"
 )
 
+# Zdarzenie wysyłane raz dla każdej nowej promocji (odporne na restart HA)
+EVENT_NEW_PROMOTION = "moya_promo_new_promotion"
+SERVICE_ANNOUNCE_CURRENT = "announce_current"
+
 # Historia promocji (kalendarz)
 STORAGE_VERSION = 1
 MAX_STORED_PROMOTIONS = 200

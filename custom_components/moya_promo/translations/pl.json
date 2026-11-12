@@ -76,5 +76,11 @@
         "name": "Promocje MOYA"
       }
     }
+  },
+  "services": {
+    "announce_current": {
+      "name": "Zgłoś bieżącą promocję",
+      "description": "Wysyła zdarzenie moya_promo_new_promotion dla bieżącej promocji (z test: true). Służy do testowania automatyzacji z powiadomieniami."
+    }
   }
 }

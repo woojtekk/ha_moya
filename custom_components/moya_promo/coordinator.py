@@ -10,8 +10,9 @@ import logging
 import aiohttp
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
@@ -21,10 +22,12 @@ from .const import (
     CONF_SCAN_INTERVAL,
     DEFAULT_SCAN_INTERVAL_HOURS,
     DOMAIN,
+    EVENT_NEW_PROMOTION,
     MAX_ARTICLES_PER_UPDATE,
     MAX_STORED_PROMOTIONS,
     NEWS_URL,
     REQUEST_TIMEOUT,
+    STATUS_EXPIRED,
     STATUS_NONE,
     STORAGE_VERSION,
     USER_AGENT,
@@ -64,12 +67,15 @@ class MoyaPromoCoordinator(DataUpdateCoordinator[MoyaData]):
         )
         # url -> Promotion (artykuły się nie zmieniają, więc pobieramy je raz)
         self._promotions: dict[str, Promotion] = {}
+        # URL ostatniej promocji, dla której wysłano zdarzenie EVENT_NEW_PROMOTION
+        self._last_announced: str | None = None
 
     async def _async_setup(self) -> None:
         """Wczytanie zapisanej historii promocji."""
         stored = await self._store.async_load()
         if not stored:
             return
+        self._last_announced = stored.get("last_announced")
         for raw in stored.get("promotions", []):
             try:
                 promo = Promotion.from_dict(raw)
@@ -94,7 +100,28 @@ class MoyaPromoCoordinator(DataUpdateCoordinator[MoyaData]):
     async def _async_save(self) -> None:
         promos = self._sorted_promotions()[:MAX_STORED_PROMOTIONS]
         self._promotions = {p.url: p for p in promos}
-        await self._store.async_save({"promotions": [p.as_dict() for p in promos]})
+        await self._store.async_save(
+            {
+                "last_announced": self._last_announced,
+                "promotions": [p.as_dict() for p in promos],
+            }
+        )
+
+    @callback
+    def async_announce(self, promo: Promotion, status: str, test: bool = False) -> None:
+        """Wysyła zdarzenie o promocji – dopiero gdy HA w pełni wystartuje.
+
+        Dzięki temu automatyzacje są już załadowane i nie przegapią zdarzenia,
+        nawet jeśli promocja pojawiła się w trakcie restartu.
+        """
+        payload = {**promo.as_dict(), "status": status, "test": test}
+
+        @callback
+        def _fire(hass: HomeAssistant) -> None:
+            hass.bus.async_fire(EVENT_NEW_PROMOTION, payload)
+            _LOGGER.debug("Wysłano zdarzenie %s: %s", EVENT_NEW_PROMOTION, payload)
+
+        async_at_started(self.hass, _fire)
 
     async def _async_update_data(self) -> MoyaData:
         try:
@@ -126,14 +153,19 @@ class MoyaPromoCoordinator(DataUpdateCoordinator[MoyaData]):
             if index == 0:
                 latest = promo
 
-        if changed:
-            await self._async_save()
-
         if latest is None:
             _LOGGER.debug("Brak promocji na liście aktualności (%d pozycji)", len(news))
             status = STATUS_NONE
         else:
             status = latest.status(dt_util.now().date())
+            # Nowa (jeszcze nie zgłoszona) i nie zakończona promocja -> zdarzenie.
+            if latest.url != self._last_announced and status != STATUS_EXPIRED:
+                self._last_announced = latest.url
+                changed = True
+                self.async_announce(latest, status)
+
+        if changed:
+            await self._async_save()
 
         return MoyaData(
             promotion=latest,

@@ -95,26 +95,89 @@ cards:
       {% endif %}
 ```
 
-## Przykładowa automatyzacja – powiadomienie o nowej promocji
+## Powiadomienia o nowej promocji
+
+Integracja wysyła zdarzenie **`moya_promo_new_promotion`** dokładnie raz dla każdej nowej promocji
+(także gdy pojawiła się w trakcie restartu HA). Dane są w `trigger.event.data`:
+`title`, `url`, `amount`, `code`, `days`, `start`, `end`, `status`, `image_url`, `stations_url`, `terms_url`, `test`.
+
+Test bez czekania na nową promocję: **Narzędzia deweloperskie → Akcje → `moya_promo.announce_current`**.
+
+Przykład – WhatsApp do kilku osób przy nowej promocji i przypomnienie 18 h przed końcem:
 
 ```yaml
-alias: MOYA – nowa promocja
+alias: MOYA – powiadomienia WhatsApp o promocji
+mode: queued
+variables:
+  wa_client: default
+  wa_to:
+    - xxxxxxxxxxx@s.whatsapp.net
+    - yyyyyyyyyyy@s.whatsapp.net
 triggers:
-  - trigger: state
-    entity_id: sensor.moya_promocje_kod_rabatowy
-conditions:
-  - condition: state
-    entity_id: binary_sensor.moya_promocje_promocja
-    state: "on"
-  - condition: template
-    value_template: "{{ trigger.from_state.state not in ['unknown', 'unavailable'] }}"
+  - trigger: event
+    event_type: moya_promo_new_promotion
+    id: nowa
+  - trigger: time
+    at: "06:00:00"
+    id: przypomnienie
 actions:
-  - action: notify.notify
-    data:
-      title: "MOYA: −{{ states('sensor.moya_promocje_rabat') | int(0) }} gr/l"
-      message: >
-        {{ states('sensor.moya_promocje_dni_promocji') }},
-        kod: {{ states('sensor.moya_promocje_kod_rabatowy') }}
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: nowa
+        sequence:
+          - variables:
+              p: "{{ trigger.event.data }}"
+              wiadomosc: >-
+                {{ '🧪 TEST\n\n' if p.test else '' }}‼️ *Nowa promocja MOYA* ‼️
+
+                ⛽ Rabat: *{{ p.amount | int(0) }} gr/l*
+
+                📅 Kiedy: {{ p.days }}
+
+                🎟️ Kod rabatowy: *{{ p.code }}*
+
+                📍 Lista stacji: {{ p.stations_url }}
+
+                🔗 {{ p.url }}
+          - repeat:
+              for_each: "{{ wa_to }}"
+              sequence:
+                - action: whatsapp.send_message
+                  continue_on_error: true
+                  data:
+                    clientId: "{{ wa_client }}"
+                    to: "{{ repeat.item }}"
+                    body:
+                      text: "{{ wiadomosc }}"
+      - conditions:
+          - condition: trigger
+            id: przypomnienie
+          - condition: state
+            entity_id: binary_sensor.moya_promocje_promocja_dzis
+            state: "on"
+          - condition: template
+            value_template: "{{ states('sensor.moya_promocje_koniec_promocji') == now().date().isoformat() }}"
+        sequence:
+          - variables:
+              wiadomosc: >-
+                ⏰ *Ostatni dzień promocji MOYA!* ⏰
+
+                Zostało ok. 18 h, promocja kończy się dziś o północy.
+
+                ⛽ Rabat: *{{ states('sensor.moya_promocje_rabat') | int(0) }} gr/l*
+
+                🎟️ Kod rabatowy: *{{ states('sensor.moya_promocje_kod_rabatowy') }}*
+          - repeat:
+              for_each: "{{ wa_to }}"
+              sequence:
+                - action: whatsapp.send_message
+                  continue_on_error: true
+                  data:
+                    clientId: "{{ wa_client }}"
+                    to: "{{ repeat.item }}"
+                    body:
+                      text: "{{ wiadomosc }}"
 ```
 
 ## Jak to działa

@@ -6,11 +6,13 @@ from datetime import datetime
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.event import async_track_time_change
 from homeassistant.helpers.storage import Store
+from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, STORAGE_VERSION
+from .const import DOMAIN, SERVICE_ANNOUNCE_CURRENT, STORAGE_VERSION
 from .coordinator import MoyaPromoCoordinator
 
 PLATFORMS: list[Platform] = [
@@ -39,6 +41,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: MoyaConfigEntry) -> bool
 
     entry.async_on_unload(
         async_track_time_change(hass, _midnight, hour=0, minute=0, second=30)
+    )
+
+    async def _announce_current(call: ServiceCall) -> None:
+        """Ręczne wysłanie zdarzenia o bieżącej promocji (test powiadomień)."""
+        data = coordinator.data
+        if not data or data.promotion is None:
+            raise HomeAssistantError("Brak bieżącej promocji MOYA.")
+        promo = data.promotion
+        coordinator.async_announce(
+            promo, promo.status(dt_util.now().date()), test=True
+        )
+
+    hass.services.async_register(DOMAIN, SERVICE_ANNOUNCE_CURRENT, _announce_current)
+    entry.async_on_unload(
+        lambda: hass.services.async_remove(DOMAIN, SERVICE_ANNOUNCE_CURRENT)
     )
     return True
 
