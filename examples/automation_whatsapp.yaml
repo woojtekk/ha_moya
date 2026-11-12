@@ -1,0 +1,106 @@
+# MOYA Promocje – powiadomienia WhatsApp
+#
+# Wymaga integracji MOYA Promocje w wersji >= 1.2.0 oraz integracji WhatsApp
+# z akcją whatsapp.send_message.
+#
+# Instalacja: Ustawienia → Automatyzacje → Nowa automatyzacja → ⋮ → Edytuj w YAML,
+# wklej całość i uzupełnij numery w `wa_to` (format: 48XXXXXXXXX@s.whatsapp.net).
+#
+# Działanie:
+#  1) Nowa promocja – zdarzenie moya_promo_new_promotion z integracji (wysyłane raz
+#     na każdą promocję, odporne na restart HA); dane w trigger.event.data.
+#  2) Przypomnienie 18 h przed końcem – o 06:00 w ostatnim dniu promocji
+#     (promocja trwa do 24:00).
+#  3) Przycisk „Uruchom” w edytorze – wywołuje moya_promo.announce_current,
+#     co ponownie odpala automatyzację z danymi bieżącej promocji (wiadomość „🧪 TEST”).
+
+alias: MOYA – powiadomienia WhatsApp o promocji
+description: >-
+  Wysyła wiadomość WhatsApp przy każdej nowej promocji MOYA (zdarzenie z integracji,
+  odporne na restart HA) oraz przypomnienie 18 h przed jej końcem (06:00 w ostatnim dniu).
+  Przycisk „Uruchom” wysyła wiadomość testową o bieżącej promocji.
+mode: queued
+variables:
+  wa_client: default
+  wa_to:
+    - 48XXXXXXXXX@s.whatsapp.net
+    - 48YYYYYYYYY@s.whatsapp.net
+triggers:
+  - trigger: event
+    event_type: moya_promo_new_promotion
+    id: nowa
+  # Promocja trwa do końca ostatniego dnia (24:00), więc 18 h wcześniej = 06:00
+  - trigger: time
+    at: "06:00:00"
+    id: przypomnienie
+actions:
+  - choose:
+      # 1) Nowa promocja (albo test)
+      - conditions:
+          - condition: trigger
+            id: nowa
+        sequence:
+          - variables:
+              p: "{{ trigger.event.data }}"
+              wiadomosc: >-
+                {{ '🧪 TEST\n\n' if p.test else '' }}‼️ *Nowa promocja MOYA* ‼️
+
+                ⛽ Rabat: *{{ p.amount | int(0) }} gr/l*
+
+                📅 Kiedy: {{ p.days }}
+
+                🎟️ Kod rabatowy: *{{ p.code }}*
+
+                📍 Lista stacji: {{ p.stations_url }}
+
+                🔗 {{ p.url }}
+          - repeat:
+              for_each: "{{ wa_to }}"
+              sequence:
+                - action: whatsapp.send_message
+                  continue_on_error: true
+                  data:
+                    clientId: "{{ wa_client }}"
+                    to: "{{ repeat.item }}"
+                    body:
+                      text: "{{ wiadomosc }}"
+
+      # 2) Przypomnienie 18 h przed końcem
+      - conditions:
+          - condition: trigger
+            id: przypomnienie
+          - condition: state
+            entity_id: binary_sensor.moya_promocje_promocja_dzis
+            state: "on"
+          - condition: template
+            value_template: >-
+              {{ states('sensor.moya_promocje_koniec_promocji') == now().date().isoformat() }}
+        sequence:
+          - variables:
+              wiadomosc: >-
+                ⏰ *Ostatni dzień promocji MOYA!* ⏰
+
+                Zostało ok. 18 h, promocja kończy się dziś o północy.
+
+                ⛽ Rabat: *{{ states('sensor.moya_promocje_rabat') | int(0) }} gr/l*
+
+                🎟️ Kod rabatowy: *{{ states('sensor.moya_promocje_kod_rabatowy') }}*
+
+                📍 Lista stacji: {{ state_attr('sensor.moya_promocje_tytul_promocji', 'stations_url') }}
+          - repeat:
+              for_each: "{{ wa_to }}"
+              sequence:
+                - action: whatsapp.send_message
+                  continue_on_error: true
+                  data:
+                    clientId: "{{ wa_client }}"
+                    to: "{{ repeat.item }}"
+                    body:
+                      text: "{{ wiadomosc }}"
+
+      # 3) Ręczne „Uruchom” -> zdarzenie testowe (automatyzacja odpali się ponownie z danymi)
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.platform is none }}"
+        sequence:
+          - action: moya_promo.announce_current
